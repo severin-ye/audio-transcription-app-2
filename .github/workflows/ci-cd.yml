@@ -1,0 +1,88 @@
+# 定义流水线名称
+name: CI/CD Pipeline
+
+# 定义触发条件
+on:
+  # 当推送代码时触发
+  push:
+    branches: [ main, develop ]  # 只在main和develop分支上触发
+  # 当创建Pull Request时触发
+  pull_request:
+    branches: [ main, develop ]  # 只对main和develop分支的PR触发
+
+# 定义工作流程中的作业
+jobs:
+  # 第一个作业：构建和测试
+  build-and-test:
+    runs-on: ubuntu-latest    # 在最新版本的Ubuntu系统上运行
+    
+    steps:    # 定义作业的步骤
+    # 步骤1：检出代码
+    - uses: actions/checkout@v2    # 使用官方的checkout action v2版本
+    
+    # 步骤2：设置Node.js环境
+    - name: Set up Node.js
+      uses: actions/setup-node@v2    # 使用官方的setup-node action v2版本
+      with:
+        node-version: '16'    # 指定Node.js版本为16
+    
+    # 步骤3：安装前端依赖
+    - name: Install React dependencies
+      working-directory: ./frontend    # 切换到前端目录
+      run: npm install    # 运行npm install安装依赖
+    
+    # 步骤4：运行前端测试
+    - name: Run React tests
+      working-directory: ./frontend
+      run: npm test -- --passWithNoTests    # 运行测试，允许没有测试用例
+    
+    # 步骤5：构建React应用
+    - name: Build React app
+      working-directory: ./frontend
+      run: npm run build    # 构建生产环境的React应用
+    
+    # 步骤6：设置Python环境
+    - name: Set up Python
+      uses: actions/setup-python@v2    # 使用官方的setup-python action v2版本
+      with:
+        python-version: '3.9'    # 指定Python版本为3.9
+    
+    # 步骤7：安装后端依赖
+    - name: Install Python dependencies
+      working-directory: ./backend    # 切换到后端目录
+      run: |    # 使用多行命令
+        python -m pip install --upgrade pip    # 更新pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi    # 如果存在requirements.txt则安装依赖
+    
+    # 步骤8：运行后端测试
+    - name: Run Python tests
+      working-directory: ./backend
+      run: |
+        if [ -d tests ]; then python -m unittest discover tests; fi    # 如果存在tests目录则运行测试
+
+  # 第二个作业：部署
+  deploy:
+    needs: build-and-test    # 需要等待build-and-test作业完成
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'    # 只在main分支上运行部署
+    
+    steps:
+    # 步骤1：检出代码
+    - uses: actions/checkout@v2
+    
+    # 步骤2：设置Node.js环境
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+    
+    # 步骤3：构建React应用
+    - name: Install React dependencies
+      working-directory: ./frontend
+      run: npm run build    # 直接运行构建命令
+    
+    # 步骤4：复制构建文件到后端静态目录
+    - name: Copy build files to backend static folder
+      run: |
+        mkdir -p backend/www    # 创建后端静态文件目录
+        cp -r frontend/build/* backend/www/    # 复制前端构建文件到后端目录 

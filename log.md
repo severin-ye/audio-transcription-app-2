@@ -52,3 +52,22 @@ GitHub仓库配置
    - 仓库地址：https://github.com/severin-ye/audio-transcription-app-2.git
    - 配置Git环境
    - 初始化项目结构 
+
+## [2025-4-11] 
+Git分支管理
+1. 创建开发分支
+   - 创建本地develop分支
+   - 推送develop分支到远程仓库
+   - 设置分支追踪关系 
+
+## [2025-4-11] 
+CI/CD配置（GitHub Actions）
+1. 创建工作流配置
+   - 设置触发条件：main和develop分支
+   - 配置构建和测试作业
+   - 配置部署作业
+2. 环境配置
+   - Node.js 16环境
+   - Python 3.9环境
+   - 前端React应用
+   - 后端Python应用 
